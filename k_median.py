@@ -8,11 +8,11 @@ import time
 
 
 def cluster_index(x_train, centers):
+    # images are of type uint8, so we need to convert to int16 to avoid overflow when subtracting and squaring
     x_train = x_train.astype(np.int16)
     centers = centers.astype(np.int16)
-    subts = x_train[:, None, :] - centers
-    d_all = np.einsum('ijk,ijk->ij', subts, subts)
-    return np.argmin(d_all, axis=1)
+    dist = np.sum((x_train[:, None, :] - centers)** 2, axis=-1)
+    return np.argmin(dist, axis=1)
 
 
 def k_median(x_train, n_cluster, max_iter=100):
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     pixel_vals = img.reshape((-1, img.shape[-1]))
     # apply k_median
     times = []
-    for i in range(100):
+    for i in range(10):
         start = time.time()
         new_pixel_vals, labels = k_median(pixel_vals, n_cluster=3)
         # reshape into image
@@ -47,9 +47,9 @@ if __name__ == '__main__':
         segmented_image = new_pixel_vals.reshape(img.shape)
         times.append(end - start)
         # plot
-        # plt.axis('off')
-        # plt.imshow(segmented_image)
-        # plt.show()
+        plt.axis('off')
+        plt.imshow(segmented_image)
+        plt.show()
     # print statistics avr min max
     times = np.array(times)
     print(f'Average time taken: {np.mean(times) * 1000:.2f} ms')
